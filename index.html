@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Rekiden II</title>
-<meta name="description" content="Rekiden II — a historical simulation of constrained decision-making.">
+<meta name="description" content="Rekiden II — history as constrained decisions.">
 
 <style>
 /* =========================================================
-   Rekiden II — Classical Record Theme (WORKING FULL)
+   Rekiden II — Classical Record Theme (FULL, FIXED)
    ========================================================= */
 :root{
   --bg:#f4f1ea;
@@ -116,9 +116,18 @@ main{
 }
 
 .entry{margin-bottom:14px}
-.meta{font-family:var(--mono);font-size:11px;color:#7a6a55;margin-bottom:4px}
+.meta{
+  font-family:var(--mono);
+  font-size:11px;
+  color:#7a6a55;
+  margin-bottom:4px;
+}
 
-.choices{margin-top:14px;display:grid;gap:10px}
+.choices{
+  margin-top:14px;
+  display:grid;
+  gap:10px;
+}
 
 .choice{
   border:1px solid var(--line);
@@ -127,7 +136,11 @@ main{
   background:linear-gradient(180deg,#fffdf7,#f1eadf);
   cursor:pointer;
 }
-.choice small{display:block;color:var(--muted);margin-top:6px}
+.choice small{
+  display:block;
+  color:var(--muted);
+  margin-top:6px;
+}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
@@ -142,6 +155,7 @@ main{
 
 .kv{display:flex;justify-content:space-between;margin:10px 0;font-family:var(--mono)}
 .note{color:var(--muted);font-size:13px}
+.warn{color:var(--danger)}
 </style>
 </head>
 
@@ -192,30 +206,31 @@ main{
 
 <script>
 /* =========================================================
-   Rekiden II — WORKING CORE LOGIC
+   Rekiden II — CORE LOGIC (1,2,3 INCLUDED)
    ========================================================= */
 
-const STORAGE_KEY = "rekiden2_save";
+const STORAGE_KEY = "rekiden2_full";
 
-/* -------- utilities -------- */
-function entry(kind,text){
-  return { t:new Date().toLocaleString(), kind, text };
+/* ---- fixed record entry (NO real-time) ---- */
+function entry(kind, era, text){
+  return { kind, era, text };
 }
 
-/* -------- game init -------- */
+/* ---- initial state ---- */
 function newGame(){
   return {
     year:1600,
+    era:"Keichō 5 (1600)",
     fsm:"NORMAL",
     mode:"Normal Governance",
     constraint:"Choices appear broad, but are bounded.",
     metrics:{ leg:65, mil:45, eco:55, lat:60 },
     log:[
-      entry("RECORD","Keichō 5 (1600). The political order begins to harden."),
-      entry("COUNCIL","Mobilization of the Uesugi domain draws scrutiny."),
-      entry("RECORD","A demand arrives from the center: justify your stance.")
+      entry("RECORD","Keichō 5","The political order begins to harden."),
+      entry("COUNCIL","Keichō 5","Mobilization of the Uesugi domain draws scrutiny."),
+      entry("RECORD","Keichō 5","A demand arrives from the center: justify your stance.")
     ],
-    step:0
+    phase:"NAOE"
   };
 }
 
@@ -224,11 +239,11 @@ let game = (() => {
   return raw ? JSON.parse(raw) : newGame();
 })();
 
-/* -------- DOM refs -------- */
+/* ---- DOM ---- */
 const logEl = document.getElementById("log");
 const choicesEl = document.getElementById("choices");
 
-/* -------- render -------- */
+/* ---- render ---- */
 function render(){
   document.getElementById("year").textContent = "Year: " + game.year;
   document.getElementById("fsm").textContent = "FSM: " + game.fsm;
@@ -240,45 +255,72 @@ function render(){
   mode.textContent = game.mode;
   constraint.textContent = game.constraint;
 
+  /* log */
   logEl.innerHTML="";
   game.log.forEach(e=>{
     const d=document.createElement("div");
     d.className="entry";
-    d.innerHTML=`<div class="meta">[${e.kind}] ${e.t}</div><div>${e.text}</div>`;
+    d.innerHTML =
+      `<div class="meta">[${e.kind} | ${e.era}]</div>
+       <div>${e.text}</div>`;
     logEl.appendChild(d);
   });
   logEl.scrollTop = logEl.scrollHeight;
 
+  /* choices */
   choicesEl.innerHTML="";
-  if(game.step===0){
+
+  /* ① SURVIVAL: NO CHOICES */
+  if(game.fsm === "SURVIVAL"){
+    const p=document.createElement("div");
+    p.className="note warn";
+    p.textContent="No actions remain. The structure has closed all options.";
+    choicesEl.appendChild(p);
+    return;
+  }
+
+  /* Phase logic */
+  if(game.phase==="NAOE"){
     addChoice(
       "Send the Naoe Letter (recorded history)",
       "Assert principle publicly. Escalation becomes unavoidable.",
       ()=>{
-        game.log.push(entry("COUNCIL","The Naoe Letter is dispatched without apology."));
+        game.log.push(entry(
+          "COUNCIL","Keichō 5",
+          "The Naoe Letter is dispatched without apology."
+        ));
         game.fsm="ESCALATION";
         game.mode="Escalation";
         game.constraint="Diplomacy narrows; conflict dominates.";
         game.metrics.lat -= 12;
-        game.step=1;
-        render();
-      }
-    );
-  }else{
-    addChoice(
-      "Accept marginalization",
-      "Preserve the domain through submission.",
-      ()=>{
-        game.log.push(entry("RECORD","Survival replaces ambition."));
-        game.fsm="SURVIVAL";
-        game.mode="Survival Mode";
-        game.constraint="Only compliance remains.";
+        game.phase="SEKIGAHARA";
         render();
       }
     );
   }
+  else if(game.phase==="SEKIGAHARA"){
+    /* ② Sekigahara: NON-INTERACTIVE EVENT */
+    game.log.push(entry(
+      "RECORD","Keichō 5",
+      "The decisive battle is fought elsewhere. You are not present."
+    ));
+    game.log.push(entry(
+      "RECORD","Keichō 5",
+      "The political order is settled without your participation."
+    ));
+    game.metrics.leg -= 10;
+    game.metrics.lat -= 10;
+    game.metrics.mil -= 5;
+
+    game.fsm="SURVIVAL";
+    game.mode="Survival Mode";
+    game.constraint="Only compliance remains.";
+    game.phase="END";
+    render();
+  }
 }
 
+/* ---- helper ---- */
 function addChoice(label,desc,fn){
   const b=document.createElement("button");
   b.className="choice";
@@ -287,31 +329,23 @@ function addChoice(label,desc,fn){
   choicesEl.appendChild(b);
 }
 
-/* -------- buttons -------- */
+/* ---- buttons ---- */
 document.getElementById("btnNew").onclick = ()=>{
-  game = newGame();
-  render();
+  game=newGame(); render();
 };
-
 document.getElementById("btnSave").onclick = ()=>{
   localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
 };
-
 document.getElementById("btnLoad").onclick = ()=>{
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    game = JSON.parse(raw);
-    render();
-  }
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){ game=JSON.parse(raw); render(); }
 };
-
 document.getElementById("btnReset").onclick = ()=>{
   localStorage.removeItem(STORAGE_KEY);
-  game = newGame();
-  render();
+  game=newGame(); render();
 };
 
-/* -------- boot -------- */
+/* ---- boot ---- */
 render();
 </script>
 
