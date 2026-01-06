@@ -1,1 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Rekiden II — a browser-based historical simulation of constrained decision-making (FSM) in late Sengoku Japan." />
+  <title>Rekiden II</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#101824; --panel2:#0e1620;
+      --text:#e8eef7; --muted:#a8b3c7; --line:#223149;
+      --accent:#7dd3fc; --danger:#fb7185; --ok:#86efac;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --r:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: radial-gradient(1000px 600px at 20% 10%, rgba(125,211,252,.12), transparent 60%),
+                  radial-gradient(900px 500px at 90% 40%, rgba(251,113,133,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      line-height:1.45;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{
+      max-width:1100px; margin:28px auto 10px; padding:0 16px;
+      display:flex; justify-content:space-between; align-items:flex-end; gap:16px;
+    }
+    .brand h1{margin:0; font-size:28px; letter-spacing:.3px}
+    .brand p{margin:6px 0 0; color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    button{
+      appearance:none; border:1px solid var(--line); background:linear-gradient(180deg, #122034, #0d1726);
+      color:var(--text); padding:10px 12px; border-radius:12px;
+      cursor:pointer; box-shadow: var(--shadow);
+      font-weight:600;
+    }
+    button:hover{border-color:#2a3d5b}
+    button:active{transform:translateY(1px)}
+    button.primary{border-color:rgba(125,211,252,.35)}
+    button.danger{border-color:rgba(251,113,133,.35)}
+    main{
+      max-width:1100px; margin:0 auto 48px; padding:0 16px;
+      display:grid; grid-template-columns: 1.35fr .65fr; gap:14px;
+    }
+    @media (max-width: 980px){
+      main{grid-template-columns:1fr}
+      .actions{justify-content:flex-start}
+      header{align-items:flex-start; flex-direction:column}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(16,24,36,.95), rgba(14,22,32,.92));
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .card .hd .title{
+      font-weight:800; letter-spacing:.2px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:3px 8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+    .body{padding:16px}
+    .log{
+      height: 54vh;
+      min-height: 360px;
+      overflow:auto;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      font-family: var(--sans);
+    }
+    .entry{margin:0 0 12px}
+    .entry .meta{
+      display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom:4px;
+    }
+    .entry .text{margin:0}
+    .choices{
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+    .choice{
+      text-align:left;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18,32,52,.85), rgba(10,18,30,.85));
+      box-shadow: var(--shadow);
+    }
+    .choice small{display:block; color:var(--muted); font-weight:500; margin-top:6px}
+    .choice[disabled]{opacity:.5; cursor:not-allowed}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .kpi{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+    }
+    .kpi .label{font-size:12px; color:var(--muted); font-family:var(--mono)}
+    .kpi .value{font-size:18px; font-weight:800; margin-top:6px}
+    .kv{display:flex; justify-content:space-between; gap:10px; margin:10px 0}
+    .kv span:first-child{color:var(--muted); font-family:var(--mono); font-size:12px}
+    .kv span:last-child{font-family:var(--mono)}
+    .note{
+      color:var(--muted);
+      font-size:13px;
+      margin:10px 0 0;
+    }
+    .footer{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:12px;
+      font-family:var(--mono);
+    }
+    .warn{color:var(--danger)}
+    .ok{color:var(--ok)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Rekiden II</h1>
+      <p>History as constrained decisions. You are not the hero; you are the system.</p>
+    </div>
+    <div class="actions">
+      <button class="primary" id="btnNew">New Run</button>
+      <button id="btnSave">Save</button>
+      <button id="btnLoad">Load</button>
+      <button class="danger" id="btnReset">Hard Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" aria-label="Narrative">
+      <div class="hd">
+        <div class="title">
+          <span>Chronicle</span>
+          <span class="pill" id="pillYear">Year: —</span>
+          <span class="pill" id="pillPhase">Phase: —</span>
+        </div>
+        <span class="pill" id="pillState">FSM: —</span>
+      </div>
+
+      <div class="body">
+        <div class="log" id="log" role="log" aria-live="polite"></div>
+
+        <div class="choices" id="choices" aria-label="Choices">
+          <!-- populated by JS -->
+        </div>
+
+        <p class="footer" id="footerHint">
+          Tip: the UI shows choices; the FSM decides which choices exist.
+        </p>
+      </div>
+    </section>
+
+    <aside class="card" aria-label="Status">
+      <div class="hd">
+        <div class="title">System Status</div>
+        <span class="pill" id="pillRunId">run: —</span>
+      </div>
+      <div class="body">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Legitimacy</div>
+            <div class="value" id="kLeg">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Military Readiness</div>
+            <div class="value" id="kMil">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Economic Capacity</div>
+            <div class="value" id="kEco">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Political Latitude</div>
+            <div class="value" id="kLat">—</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="kv"><span>Protagonist</span><span>Uesugi Kagekatsu</span></div>
+          <div class="kv"><span>Mode</span><span id="kvMode">—</span></div>
+          <div class="kv"><span>Constraint</span><span id="kvConstraint">—</span></div>
+        </div>
+
+        <p class="note">
+          Rekiden II progresses along recorded history. “Winning” is not supported.
+          Terminal states are survival, marginalization, or collapse.
+        </p>
+        <p class="note warn" id="noteWarn" style="display:none"></p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    /***********************
+     * Rekiden II (Minimal)
+     * - Pure client-side FSM demo
+     * - One “chapter”: The Naoe Letter (c.1600)
+     * - Extend by adding events & transitions
+     ***********************/
+
+    const STORAGE_KEY = "rekiden2_save_v1";
+
+    // ---------- FSM / State ----------
+    const FSM = {
+      // System states (very coarse on purpose for v0)
+      states: {
+        "NORMAL": {
+          label: "Normal Governance",
+          constraint: "Choices appear broad, but are still bounded."
+        },
+        "ESCALATION": {
+          label: "Escalation",
+          constraint: "Diplomacy narrows; conflict pathways dominate."
+        },
+        "MARGINALIZATION": {
+          label: "Marginalization",
+          constraint: "Choices shrink; survival dominates."
+        },
+        "SURVIVAL_MODE": {
+          label: "Survival Mode",
+          constraint: "Only compliance, retreat, and preservation remain."
+        }
+      }
+    };
+
+    // ---------- Game Data (v0: single event) ----------
+    const EVENTS = [
+      {
+        id: "naoe_letter",
+        year: 1600,
+        phase: "Trigger Event",
+        title: "The Naoe Letter",
+        intro: [
+          "Toyotomi central authority is consolidating into a new order.",
+          "A demand arrives: justify your mobilization and political stance.",
+          "Your advisor drafts a response that is both legalistic and confrontational.",
+          "History records that this letter becomes a trigger that hardens positions."
+        ].join(" "),
+        // choices are filtered by FSM conditions
+        choices: [
+          {
+            id: "send_defiant",
+            label: "Send the confrontational letter (recorded history)",
+            desc: "Assert principles publicly. Accept that escalation becomes likely.",
+            // requirement: can be chosen only if not already in survival mode
+            when: (g) => g.fsm !== "SURVIVAL_MODE",
+            apply: (g) => {
+              g.metrics.leg -= 8;
+              g.metrics.lat -= 12;
+              g.metrics.mil += 6;
+              g.fsm = "ESCALATION";
+              g.flags.naoe_sent = true;
+              g.log.push(entry("CHOICE", "You send the letter. The political surface hardens into a boundary."));
+              g.log.push(entry("SYSTEM", "FSM transitions to ESCALATION. Some options will cease to exist."));
+              g.noteWarn = "You felt agency. The system interpreted it as hostility.";
+              g.mode = "Escalation";
+              g.constraint = FSM.states[g.fsm].constraint;
+            }
+          },
+          {
+            id: "send_softened",
+            label: "Soften the letter (not recorded)",
+            desc: "Attempt to preserve latitude. Expect less internal cohesion.",
+            when: (g) => g.fsm === "NORMAL" || g.fsm === "ESCALATION",
+            apply: (g) => {
+              g.metrics.leg += 2;
+              g.metrics.lat += 5;
+              g.metrics.mil -= 4;
+              // even “softening” does not fully avoid structural drift
+              g.fsm = "ESCALATION";
+              g.flags.naoe_sent = true;
+              g.log.push(entry("CHOICE", "You soften the tone. It buys time, not freedom."));
+              g.log.push(entry("SYSTEM", "FSM still transitions to ESCALATION. The timeline tightens anyway."));
+              g.noteWarn = "Even non-recorded choices may converge to the same state.";
+              g.mode = "Escalation";
+              g.constraint = FSM.states[g.fsm].constraint;
+            }
+          },
+          {
+            id: "delay",
+            label: "Delay and gather information",
+            desc: "Trade initiative for uncertainty. Risk being framed as evasive.",
+            when: (g) => g.fsm === "NORMAL",
+            apply: (g) => {
+              g.metrics.lat -= 6;
+              g.metrics.leg -= 3;
+              g.metrics.eco -= 1;
+              g.log.push(entry("CHOICE", "You delay. Rumors fill the gap where clarity should be."));
+              // drift toward escalation
+              g.fsm = "ESCALATION";
+              g.log.push(entry("SYSTEM", "FSM transitions to ESCALATION. Delay becomes a decision."));
+              g.noteWarn = "In constrained systems, delay is a state transition.";
+              g.mode = "Escalation";
+              g.constraint = FSM.states[g.fsm].constraint;
+              g.flags.naoe_delayed = true;
+            }
+          }
+        ],
+        // after choice, advance to a minimal follow-up “checkpoint”
+        next: "checkpoint_1600"
+      },
+      {
+        id: "checkpoint_1600",
+        year: 1600,
+        phase: "Checkpoint",
+        title: "Pre-Sekigahara Pressure",
+        intro: [
+          "You have not yet lost a battle.",
+          "And yet your influence is already being decided elsewhere.",
+          "Orders, alliances, and reputations crystallize into a new political geometry."
+        ].join(" "),
+        choices: [
+          {
+            id: "prepare_defense",
+            label: "Prepare defense and logistics",
+            desc: "Increase readiness; accept economic strain.",
+            when: (g) => g.fsm === "ESCALATION" || g.fsm === "MARGINALIZATION",
+            apply: (g) => {
+              g.metrics.mil += 8;
+              g.metrics.eco -= 5;
+              g.metrics.lat -= 3;
+              g.log.push(entry("CHOICE", "You invest in readiness. The system rewards caution, not ambition."));
+              // escalation tends to marginalization when readiness rises but latitude falls
+              if (g.metrics.lat <= 35) g.fsm = "MARGINALIZATION";
+              g.mode = (g.fsm === "MARGINALIZATION") ? "Marginalization" : "Escalation";
+              g.constraint = FSM.states[g.fsm].constraint;
+              g.log.push(entry("SYSTEM", "Constraints tighten. You are being pushed to the edge of the board."));
+            }
+          },
+          {
+            id: "seek_settlement",
+            label: "Seek political settlement",
+            desc: "Attempt to preserve domain continuity; accept reputation loss.",
+            when: (g) => g.fsm !== "SURVIVAL_MODE",
+            apply: (g) => {
+              g.metrics.leg -= 4;
+              g.metrics.lat += 4;
+              g.metrics.mil -= 5;
+              g.log.push(entry("CHOICE", "You seek settlement. You gain room, and lose posture."));
+              // settlement moves you toward survival mode eventually
+              if (g.metrics.mil <= 35) g.fsm = "SURVIVAL_MODE";
+              g.mode = (g.fsm === "SURVIVAL_MODE") ? "Survival Mode" : "Escalation";
+              g.constraint = FSM.states[g.fsm].constraint;
+              g.log.push(entry("SYSTEM", "FSM recalculates. Some ‘honorable’ actions are now unavailable."));
+            }
+          },
+          {
+            id: "continue",
+            label: "Continue (end demo)",
+            desc: "End this prototype run. Save is available.",
+            when: (_) => true,
+            apply: (g) => {
+              g.log.push(entry("SYSTEM", "Demo ends here (v0). Next: Sekigahara → Aizu disposition."));
+              g.isDemoEnd = true;
+            }
+          }
+        ],
+        next: null
+      }
+    ];
+
+    // ---------- Default Game State ----------
+    function newGame() {
+      const runId = cryptoRandomId();
+      return {
+        runId,
+        idx: 0, // index in EVENTS
+        fsm: "NORMAL",
+        mode: "Normal Governance",
+        constraint: FSM.states["NORMAL"].constraint,
+        year: EVENTS[0].year,
+        phase: EVENTS[0].phase,
+        metrics: {
+          leg: 65, // legitimacy / trust
+          mil: 45, // military readiness
+          eco: 55, // economic capacity
+          lat: 60  // political latitude (options width)
+        },
+        flags: {},
+        log: [
+          entry("SYSTEM", "Booting Rekiden II (v0)."),
+          entry("SYSTEM", "You will see choices. The FSM decides what choices exist.")
+        ],
+        noteWarn: "",
+        isDemoEnd: false
+      };
+    }
+
+    // ---------- Helpers ----------
+    function clamp(n, lo=0, hi=100){ return Math.max(lo, Math.min(hi, n)); }
+    function entry(kind, text){
+      const t = new Date().toLocaleString();
+      return { t, kind, text };
+    }
+    function cryptoRandomId(){
+      // short readable id
+      const a = new Uint8Array(6);
+      crypto.getRandomValues(a);
+      return Array.from(a).map(x => x.toString(16).padStart(2,"0")).join("");
+    }
+
+    // ---------- Rendering ----------
+    const $ = (id) => document.getElementById(id);
+
+    function render(g){
+      // clamp metrics
+      for (const k of Object.keys(g.metrics)) g.metrics[k] = clamp(g.metrics[k]);
+
+      // header pills
+      $("pillYear").textContent = `Year: ${g.year}`;
+      $("pillPhase").textContent = `Phase: ${g.phase}`;
+      $("pillState").textContent = `FSM: ${g.fsm}`;
+
+      // sidebar
+      $("pillRunId").textContent = `run: ${g.runId}`;
+      $("kLeg").textContent = g.metrics.leg;
+      $("kMil").textContent = g.metrics.mil;
+      $("kEco").textContent = g.metrics.eco;
+      $("kLat").textContent = g.metrics.lat;
+      $("kvMode").textContent = g.mode;
+      $("kvConstraint").textContent = g.constraint;
+
+      // warning note
+      const w = $("noteWarn");
+      if (g.noteWarn){
+        w.style.display = "block";
+        w.textContent = g.noteWarn;
+      } else {
+        w.style.display = "none";
+      }
+
+      // log
+      const log = $("log");
+      log.innerHTML = "";
+      const currentEvent = EVENTS[g.idx];
+      // show current event header narrative once per event (if not already shown)
+      if (!g.flags[`shown_${currentEvent.id}`]){
+        g.log.push(entry("EVENT", `${currentEvent.title} — ${currentEvent.intro}`));
+        g.flags[`shown_${currentEvent.id}`] = true;
+      }
+
+      for (const e of g.log.slice(-60)){
+        const wrap = document.createElement("div");
+        wrap.className = "entry";
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `[${e.kind}] ${e.t}`;
+        const txt = document.createElement("p");
+        txt.className = "text";
+        txt.textContent = e.text;
+        wrap.appendChild(meta);
+        wrap.appendChild(txt);
+        log.appendChild(wrap);
+      }
+      log.scrollTop = log.scrollHeight;
+
+      // choices
+      const c = $("choices");
+      c.innerHTML = "";
+
+      const choices = currentEvent.choices;
+      let anyEnabled = false;
+
+      for (const ch of choices){
+        const enabled = !!ch.when(g) && !g.isDemoEnd;
+        if (enabled) anyEnabled = true;
+
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.disabled = !enabled;
+        btn.innerHTML = `${escapeHtml(ch.label)}<small>${escapeHtml(ch.desc)}</small>`;
+        btn.addEventListener("click", () => {
+          if (btn.disabled) return;
+          ch.apply(g);
+          // update event metadata
+          if (currentEvent.next && !g.isDemoEnd){
+            const nextIdx = EVENTS.findIndex(ev => ev.id === currentEvent.next);
+            if (nextIdx >= 0){
+              g.idx = nextIdx;
+              g.year = EVENTS[g.idx].year;
+              g.phase = EVENTS[g.idx].phase;
+            }
+          }
+          // refresh derived
+          g.year = EVENTS[g.idx].year;
+          g.phase = EVENTS[g.idx].phase;
+          g.constraint = FSM.states[g.fsm].constraint;
+          render(g);
+        });
+
+        c.appendChild(btn);
+      }
+
+      if (!anyEnabled && !g.isDemoEnd){
+        const p = document.createElement("p");
+        p.className = "note warn";
+        p.textContent = "No available actions. The FSM has removed your choices.";
+        c.appendChild(p);
+      }
+
+      // footer hint
+      $("footerHint").textContent = g.isDemoEnd
+        ? "Demo ended. Save this run or start a new one."
+        : "Tip: the UI shows choices; the FSM decides which choices exist.";
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    // ---------- Save/Load ----------
+    function saveGame(g){
+      const payload = JSON.stringify(g);
+      localStorage.setItem(STORAGE_KEY, payload);
+      g.log.push(entry("SYSTEM", "Saved to local storage."));
+      render(g);
+    }
+    function loadGame(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+    function hardReset(){
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // ---------- Boot ----------
+    let game = loadGame() || newGame();
+    // Ensure new fields exist if older save
+    if (!game.runId) game.runId = cryptoRandomId();
+    if (!game.flags) game.flags = {};
+    if (!game.log) game.log = [entry("SYSTEM","Recovered run.")];
+    if (!game.metrics) game.metrics = { leg:65, mil:45, eco:55, lat:60 };
+    if (!game.fsm) game.fsm = "NORMAL";
+    game.mode = game.mode || FSM.states[game.fsm]?.label || "—";
+    game.constraint = game.constraint || FSM.states[game.fsm]?.constraint || "—";
+    if (typeof game.idx !== "number") game.idx = 0;
+    game.year = EVENTS[game.idx].year;
+    game.phase = EVENTS[game.idx].phase;
+
+    // Wire buttons
+    $("btnNew").addEventListener("click", () => { game = newGame(); render(game); });
+    $("btnSave").addEventListener("click", () => saveGame(game));
+    $("btnLoad").addEventListener("click", () => {
+      const g = loadGame();
+      if (!g){
+        game.log.push(entry("SYSTEM", "No save found."));
+        render(game);
+        return;
+      }
+      game = g;
+      // patch derived
+      game.year = EVENTS[game.idx]?.year ?? EVENTS[0].year;
+      game.phase = EVENTS[game.idx]?.phase ?? EVENTS[0].phase;
+      game.constraint = FSM.states[game.fsm]?.constraint ?? "—";
+      game.mode = game.mode || (FSM.states[game.fsm]?.label ?? "—");
+      game.log.push(entry("SYSTEM", "Loaded from local storage."));
+      render(game);
+    });
+    $("btnReset").addEventListener("click", () => {
+      hardReset();
+      game = newGame();
+      game.log.push(entry("SYSTEM", "Hard reset completed (local storage cleared)."));
+      render(game);
+    });
+
+    render(game);
+  </script>
+</body>
+</html>
 
