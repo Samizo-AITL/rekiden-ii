@@ -1,169 +1,162 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Rekiden II — a historical simulation of constrained decision-making." />
-  <title>Rekiden II</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rekiden II</title>
+<meta name="description" content="Rekiden II — a historical simulation of constrained decision-making.">
 
-  <style>
-    /* =========================================================
-       Rekiden II — Classical Record Theme (FULL)
-       ========================================================= */
+<style>
+/* =========================================================
+   Rekiden II — Classical Record Theme (WORKING FULL)
+   ========================================================= */
+:root{
+  --bg:#f4f1ea;
+  --panel:#fbf8f1;
+  --text:#1f1f1f;
+  --muted:#5f5a50;
+  --line:#cfc6b8;
+  --accent:#7a3e2e;
+  --danger:#8b2f2f;
 
-    :root{
-      --bg:#f4f1ea;
-      --panel:#fbf8f1;
-      --panel2:#f1ece2;
-      --text:#1f1f1f;
-      --muted:#5f5a50;
-      --line:#cfc6b8;
-      --accent:#7a3e2e;
-      --danger:#8b2f2f;
-      --ok:#3a6b4f;
+  --shadow:0 8px 18px rgba(0,0,0,.14);
+  --r:16px;
 
-      --shadow: 0 8px 18px rgba(0,0,0,.14);
-      --r:16px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sans: "Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",
+          Georgia,"Times New Roman",serif;
+}
 
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-              "Liberation Mono", "Courier New", monospace;
-      --sans: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho",
-              Georgia, "Times New Roman", serif;
-    }
+*{box-sizing:border-box}
 
-    *{box-sizing:border-box}
+body{
+  margin:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,.05)),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.65;
+}
 
-    body{
-      margin:0;
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(0,0,0,.03), transparent 60%),
-        radial-gradient(900px 600px at 80% 60%, rgba(0,0,0,.025), transparent 55%),
-        linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,.05)),
-        var(--bg);
-      color:var(--text);
-      font-family:var(--sans);
-      line-height:1.65;
-    }
+header{
+  max-width:1100px;
+  margin:28px auto 12px;
+  padding:0 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+}
 
-    header{
-      max-width:1100px;
-      margin:28px auto 12px;
-      padding:0 16px;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:16px;
-    }
+.brand h1{margin:0;font-size:28px}
+.brand p{margin:6px 0 0;color:var(--muted)}
 
-    .brand h1{margin:0;font-size:28px}
-    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
 
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
+button{
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#f7f2e8,#e9decd);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:700;
+}
+button.primary{border-color:var(--accent)}
+button.danger{border-color:var(--danger)}
 
-    button{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, #f7f2e8, #e9decd);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:700;
-    }
-    button.primary{border-color:var(--accent)}
-    button.danger{border-color:var(--danger)}
+main{
+  max-width:1100px;
+  margin:0 auto 48px;
+  padding:0 16px;
+  display:grid;
+  grid-template-columns:1.35fr .65fr;
+  gap:14px;
+}
 
-    main{
-      max-width:1100px;
-      margin:0 auto 48px;
-      padding:0 16px;
-      display:grid;
-      grid-template-columns:1.35fr .65fr;
-      gap:14px;
-    }
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
 
-    .card{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
+.hd{
+  padding:14px 16px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:linear-gradient(180deg,#f7f2e8,#efe6d7);
+  font-weight:700;
+}
 
-    .hd{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      justify-content:space-between;
-      background: linear-gradient(180deg, #f7f2e8, #efe6d7);
-      font-weight:700;
-    }
+.pill{
+  font-family:var(--mono);
+  font-size:12px;
+  padding:3px 8px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,255,255,.6);
+  color:var(--muted);
+}
 
-    .pill{
-      font-family:var(--mono);
-      font-size:12px;
-      padding:3px 8px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:rgba(255,255,255,.6);
-      color:var(--muted);
-    }
+.body{padding:16px}
 
-    .body{padding:16px}
+.log{
+  height:52vh;
+  min-height:340px;
+  overflow:auto;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#faf7f0;
+}
 
-    .log{
-      height:52vh;
-      min-height:340px;
-      overflow:auto;
-      padding:14px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#faf7f0;
-    }
+.entry{margin-bottom:14px}
+.meta{font-family:var(--mono);font-size:11px;color:#7a6a55;margin-bottom:4px}
 
-    .entry{margin-bottom:14px}
-    .meta{font-family:var(--mono);font-size:11px;color:#7a6a55;margin-bottom:4px}
+.choices{margin-top:14px;display:grid;gap:10px}
 
-    .choices{margin-top:14px;display:grid;gap:10px}
+.choice{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:linear-gradient(180deg,#fffdf7,#f1eadf);
+  cursor:pointer;
+}
+.choice small{display:block;color:var(--muted);margin-top:6px}
 
-    .choice{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:linear-gradient(180deg,#fffdf7,#f1eadf);
-      cursor:pointer;
-    }
-    .choice[disabled]{opacity:.55;cursor:not-allowed}
-    .choice small{display:block;color:var(--muted);margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fffdf7;
+}
+.kpi .label{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.kpi .value{font-size:18px;font-weight:800;margin-top:6px}
 
-    .kpi{
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#fffdf7;
-    }
-
-    .kpi .label{font-family:var(--mono);font-size:12px;color:var(--muted)}
-    .kpi .value{font-size:18px;font-weight:800;margin-top:6px}
-
-    .kv{display:flex;justify-content:space-between;margin:10px 0;font-family:var(--mono)}
-    .note{color:var(--muted);font-size:13px}
-    .warn{color:var(--danger)}
-  </style>
+.kv{display:flex;justify-content:space-between;margin:10px 0;font-family:var(--mono)}
+.note{color:var(--muted);font-size:13px}
+</style>
 </head>
 
 <body>
+
 <header>
   <div class="brand">
     <h1>Rekiden II</h1>
     <p>History as constrained decisions. You are not the hero; you are the system.</p>
   </div>
   <div class="actions">
-    <button class="primary" id="new">New Run</button>
-    <button id="save">Save</button>
-    <button id="load">Load</button>
-    <button class="danger" id="reset">Hard Reset</button>
+    <button class="primary" id="btnNew">New Run</button>
+    <button id="btnSave">Save</button>
+    <button id="btnLoad">Load</button>
+    <button class="danger" id="btnReset">Hard Reset</button>
   </div>
 </header>
 
@@ -199,36 +192,43 @@
 
 <script>
 /* =========================================================
-   Rekiden II — Minimal Working Core
+   Rekiden II — WORKING CORE LOGIC
    ========================================================= */
 
-const STORAGE = "rekiden2_full";
+const STORAGE_KEY = "rekiden2_save";
 
+/* -------- utilities -------- */
 function entry(kind,text){
   return { t:new Date().toLocaleString(), kind, text };
 }
 
+/* -------- game init -------- */
 function newGame(){
   return {
     year:1600,
     fsm:"NORMAL",
     mode:"Normal Governance",
     constraint:"Choices appear broad, but are bounded.",
-    metrics:{leg:65,mil:45,eco:55,lat:60},
+    metrics:{ leg:65, mil:45, eco:55, lat:60 },
     log:[
-      entry("RECORD","In the fifth year of Keichō, the political order begins to harden."),
-      entry("COUNCIL","Mobilization raises questions at the center of power."),
-      entry("RECORD","A demand arrives: justify your political stance.")
+      entry("RECORD","Keichō 5 (1600). The political order begins to harden."),
+      entry("COUNCIL","Mobilization of the Uesugi domain draws scrutiny."),
+      entry("RECORD","A demand arrives from the center: justify your stance.")
     ],
     step:0
   };
 }
 
-let game = JSON.parse(localStorage.getItem(STORAGE)) || newGame();
+let game = (() => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : newGame();
+})();
 
+/* -------- DOM refs -------- */
 const logEl = document.getElementById("log");
 const choicesEl = document.getElementById("choices");
 
+/* -------- render -------- */
 function render(){
   document.getElementById("year").textContent = "Year: " + game.year;
   document.getElementById("fsm").textContent = "FSM: " + game.fsm;
@@ -247,7 +247,7 @@ function render(){
     d.innerHTML=`<div class="meta">[${e.kind}] ${e.t}</div><div>${e.text}</div>`;
     logEl.appendChild(d);
   });
-  logEl.scrollTop=logEl.scrollHeight;
+  logEl.scrollTop = logEl.scrollHeight;
 
   choicesEl.innerHTML="";
   if(game.step===0){
@@ -255,11 +255,11 @@ function render(){
       "Send the Naoe Letter (recorded history)",
       "Assert principle publicly. Escalation becomes unavoidable.",
       ()=>{
-        game.log.push(entry("COUNCIL","The letter is dispatched without apology."));
+        game.log.push(entry("COUNCIL","The Naoe Letter is dispatched without apology."));
         game.fsm="ESCALATION";
         game.mode="Escalation";
         game.constraint="Diplomacy narrows; conflict dominates.";
-        game.metrics.lat-=12;
+        game.metrics.lat -= 12;
         game.step=1;
         render();
       }
@@ -287,13 +287,33 @@ function addChoice(label,desc,fn){
   choicesEl.appendChild(b);
 }
 
+/* -------- buttons -------- */
+document.getElementById("btnNew").onclick = ()=>{
+  game = newGame();
+  render();
+};
+
+document.getElementById("btnSave").onclick = ()=>{
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
+};
+
+document.getElementById("btnLoad").onclick = ()=>{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    game = JSON.parse(raw);
+    render();
+  }
+};
+
+document.getElementById("btnReset").onclick = ()=>{
+  localStorage.removeItem(STORAGE_KEY);
+  game = newGame();
+  render();
+};
+
+/* -------- boot -------- */
 render();
-
-new.onclick=()=>{game=newGame();render();}
-save.onclick=()=>localStorage.setItem(STORAGE,JSON.stringify(game));
-load.onclick=()=>{const g=localStorage.getItem(STORAGE);if(g){game=JSON.parse(g);render();}}
-reset.onclick=()=>{localStorage.removeItem(STORAGE);game=newGame();render();}
-
 </script>
+
 </body>
 </html>
